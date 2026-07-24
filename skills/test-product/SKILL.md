@@ -5,231 +5,350 @@ description: Use when a feature, business flow, release, integration, or whole s
 
 # Test Product
 
-Test the user's actual outcome with risk-based, traceable evidence. Move quickly by choosing
-the cheapest test that proves each requirement; spend more only where risk justifies it.
+Test the user's real outcome with risk-based, traceable evidence. Prefer the cheapest test
+that can disprove a requirement; escalate to broader and costlier testing only when the
+remaining risk justifies it.
 
 ## Non-negotiable boundaries
 
-- Never fix defects. Never modify production code, weaken assertions, or add test-only
-  workarounds that hide product behavior.
-- Create or modify only user-approved test artifacts: established test directories,
-  sanitized fixtures, test-only configuration/IaC, test scripts, and QA documentation.
-- Inspect the repository and connected systems instead of guessing commands, architecture,
-  contracts, versions, or sources of truth.
-- Stop before test design when the user goal or expected behavior is materially ambiguous.
-- Stop on Critical/High defects, data risk, or a conflict that changes expected behavior.
-- Report Medium/Low defects immediately, record them, then continue independent tests.
-- Never perform a repair automatically or treat a defect report as permission to fix.
-- Never run destructive security, load, or live production actions without explicit,
-  action-specific approval.
-- Never claim `Passed`, compatibility, coverage, or readiness without current evidence.
+- Never fix a defect in this workflow. Never modify production code, weaken assertions, or add
+  a test-only workaround that conceals product behavior.
+- Create or modify only approved test artifacts: existing test directories, sanitized fixtures,
+  test-only configuration or IaC, test scripts, and QA documentation.
+- Inspect the repository and connected systems before guessing commands, architecture,
+  contracts, versions, environments, or sources of truth.
+- Stop before case design when the user goal or a material expected result is ambiguous.
+- Report every product defect or blocker to the user as soon as it is confirmed.
+- Stop all affected execution on Critical/High defects, data risk, an invalid environment, or
+  a requirement conflict that changes the oracle. Continue only independent work after
+  Medium/Low findings.
+- Do not ask to repair the defect inside this workflow. State that remediation requires a
+  separate task; the user can request it later.
+- Never run destructive security tests, load, fault injection, real external side effects, or
+  production mutations without action-specific approval.
+- Never claim `Passed`, compatibility, coverage, or readiness without current, reproducible
+  evidence.
 
-## Required workflow
+## Operating model
 
-Follow this order. Do not skip a gate because the request sounds urgent:
+Follow this sequence and do not cross a gate early:
 
-`Intent → Discover → Classify → Requirements → Ambiguity gate → Acceptance criteria → Risk
-→ RTM → Profile → Test plan → Approve → Artifacts → Environment → Smoke → Execute → Defects
-→ Reconcile → Close`
+`Intent → Discovery → Classification → Test basis → Acceptance criteria → Ambiguity gate →
+Risk → Technique/layer selection → RTM → Plan → Proportional approval → Artifacts →
+Environment qualification → Smoke → Execution → Immediate findings → Reconciliation →
+Closure`
 
-Keep communication brief. Explain the technique used and why in one factual sentence.
+Keep user communication brief. For each important technique, say what was used and why in one
+factual sentence. Explain a pause with the exact missing decision, access, evidence, or safety
+approval.
+
+## Invocation router
+
+After discovery, choose one intent route:
+
+| Route | Continue through | Do not do |
+|---|---|---|
+| `Shift Left / plan-only` | requirements, risk, models, RTM, plan, design-readiness closure | runtime environment or execution |
+| `Read-only assessment` | inspect current evidence/quality risks, reconcile what can be proven, assessment closure | files, mutations, or implied runtime proof |
+| `Focused execution` | compact plan, selected artifacts if requested, safe execution, closure | broad irrelevant suites |
+| `Full execution` | complete applicable matrix, approved broad/live/non-functional work, closure | unsafe “test everything” behavior |
+
+Choose target mode independently:
+
+| Target mode | Meaning |
+|---|---|
+| `Local/hermetic` | in-process, local, containerized, or isolated dependency work |
+| `Isolated live` | running staging/test/preview/sandbox target |
+| `Deployed/production-like` | shared deployed or production target requiring full preflight and bounded authority |
+
+Every route uses the same oracle, traceability, immediate-defect, evidence, and verdict rules.
+A low-risk Focused run may keep a compact RTM/summary in chat when files were not requested.
+`Pre-development` closes with a design-readiness verdict; it does not pretend runtime proof.
+
+Step exit conditions:
+
+- discovery: the behavior path, change surface, commands, dependencies, and missing access are
+  known enough to classify;
+- requirements/risk: material criteria have complete oracles and calibrated risk, or are
+  explicitly blocked;
+- design/RTM: each applicable criterion has a technique, level, case direction, and evidence
+  contract;
+- planning: target, order, entry/exit/stop, effects, cleanup, cost, and required approvals are
+  explicit;
+- environment: fidelity gaps are recorded and qualification/smoke support the intended claim;
+- execution: every selected case is terminal or a stop/block is reconciled;
+- closure: RTM, defects, evidence, metrics, residual risk, and verdict agree.
 
 ## 1. Discover before asking
 
-Read applicable instructions and documentation. Inspect repository status and diffs, manifests,
-lockfiles, architecture, test layout, CI/CD, deployment configuration, prior reports, and real
-run commands. Trace the requested behavior through input, validation, authorization, domain
-logic, persistence, integrations, side effects, and user-visible output.
+Read applicable repository instructions and product documentation. Inspect status and diffs,
+manifests, lockfiles, architecture, test layout, CI/CD, deployment configuration, prior
+reports, feature flags, migrations, and real run commands. Trace the requested behavior
+through input, validation, authorization, domain logic, persistence, integrations, side
+effects, observability, and user-visible output.
 
-Locate connected repositories, services, providers, schemas, events, generated clients, and
-deployed versions. Search the repository before asking questions that code or documentation
-can answer.
-
-Do not alter unrelated user changes.
+Locate connected repositories, services, providers, schemas, events, generated clients,
+deployed versions, and rollout configuration. Search before asking anything code or
+documentation can answer. Preserve unrelated user changes.
 
 ## 2. Classify the request
 
-Classify four independent dimensions:
+Classify four independent dimensions and give concrete reasons:
 
 | Dimension | Values |
 |---|---|
 | Lifecycle | `Pre-development`, `Implemented`, `Deployed` |
-| Scope | `Feature`, `Business flow`, `Change or release`, `Whole product` |
-| Risk | `Low`, `Medium`, `High or critical` |
+| Scope | `Feature`, `Business flow`, `Integration or contract`, `Change or release`, `Whole product` |
+| Risk | `Low`, `Medium`, `High`, `Critical` |
 | Profile | `Focused`, `Full ride` |
 
-Tell the user the provisional classification and concrete reasons. Reclassify when discovery
-shows broader impact.
+Lifecycle and scope may be final after discovery; risk and profile remain provisional until
+acceptance criteria and calibrated risk scoring are complete.
 
-Recommend `Focused` by default: fast, requirements-complete sanity testing with targeted
-lower-level and regression coverage. Recommend `Full ride` for critical flows, releases,
-large changes, weak coverage, or explicit requests. Full ride means every *applicable* layer,
-not every known test. Obtain explicit approval before costly live or subagent simulations.
+Recommend `Focused` by default: requirements-complete sanity testing plus the smallest
+risk-targeted regression set. Recommend `Full ride` for critical flows, releases, broad
+changes, distributed-version changes, weak existing evidence, or an explicit request.
+`Full ride` means every applicable layer plus approved broad or human simulation; it never
+means every known test or permission for unsafe work.
 
-## 3. Establish testable intent
+Use the calibrated risk and profile rules in
+[requirements-rtm-and-risk.md](references/requirements-rtm-and-risk.md) and
+[test-planning.md](references/test-planning.md). Reclassify when discovery changes exposure.
+Use the most advanced lifecycle state: `Deployed` when testing a running target, otherwise
+`Implemented` when code exists, otherwise `Pre-development`.
 
-State in one sentence:
+## Conditional reference router
 
-`For <user>, <scope> must achieve <observable outcome> under <material conditions>.`
+Before acceptance design, RTM, or planning, load every applicable branch:
 
-Establish current behavior, desired behavior, measurable acceptance criteria, non-goals,
-sources of truth, permissions, side effects, edge cases, failures, compatibility, privacy,
-security, performance, rollout, and rollback constraints as applicable.
+- any cross-process/service/provider/schema/version boundary → read
+  [contracts-and-distributed-systems.md](references/contracts-and-distributed-systems.md);
+- any security-sensitive asset/entry point → read
+  [security-testing.md](references/security-testing.md);
+- any latency/load/capacity/scalability claim → read
+  [performance-testing.md](references/performance-testing.md);
+- any dependency/failover/recovery objective → read
+  [resilience-testing.md](references/resilience-testing.md);
+- any human-facing task, accessibility target, or stakeholder acceptance → read
+  [usability-accessibility-and-uat.md](references/usability-accessibility-and-uat.md);
+- any implemented change/code review → read
+  [code-quality-and-maintainability.md](references/code-quality-and-maintainability.md);
+- any running/live target or test-data mutation → read
+  [environment-data-and-live-testing.md](references/environment-data-and-live-testing.md).
 
-If “better,” “easier,” “correct,” “fast,” or similar wording lacks a measurable oracle, stop
-and ask a focused product question. Do not begin “safe tests” against an unknown expectation.
+These references govern requirement completeness and planning even when the route is Shift
+Left/plan-only and no runtime execution will occur.
 
-For `Pre-development`, perform Shift Left analysis and finish with acceptance criteria, risks,
-RTM, and test plan. Mark runtime rows `Not run — implementation absent`; do not report them as
-failures.
+## 3. Establish a testable goal and oracle
 
-Read [requirements-rtm-and-risk.md](references/requirements-rtm-and-risk.md) for requirement,
-acceptance, risk, and RTM rules.
+State:
 
-## 4. Build the Requirement Traceability Matrix
+`For <user/actor>, <scope> must achieve <observable outcome> under <material conditions>,
+without <forbidden effects>.`
 
-Assign a stable ID to every testable acceptance criterion. Map each requirement to user value,
-risk, level, technique, test case IDs, environment, result, evidence, and defect IDs.
+Establish current and desired behavior, source precedence, measurable acceptance criteria,
+non-goals, permissions, failure behavior, compatibility, privacy, security, performance,
+rollout, rollback, time/tolerance rules, and external effects where applicable.
 
-Use only `Passed`, `Failed`, `Blocked`, `Not run`, and `Not applicable`. Never leave a final
-result blank. Preserve an authoritative external system such as TestRail or Jira: create a
-local index with external IDs and evidence links rather than duplicating it.
+If “better,” “easier,” “correct,” “fast,” “secure,” or “synchronized” has no measurable
+oracle, stop and ask one focused product question. Do not use current implementation as the
+oracle when product intent is unclear.
+
+For `Pre-development`, perform Shift Left analysis. Produce criteria, risks, RTM, and plan.
+Set runtime rows to `Result: Not run` and `Reason: implementation absent`; do not call them
+failed.
+
+Read [requirements-rtm-and-risk.md](references/requirements-rtm-and-risk.md) completely before
+designing cases or assigning risk.
+
+## 4. Select techniques and levels before building the RTM
+
+For every atomic criterion:
+
+1. identify failure modes and risk;
+2. choose the technique that models the criterion shape;
+3. choose the lowest layer that can observe the required outcome and forbidden effects;
+4. add a higher layer only for integration, deployment, or user-journey confidence missing
+   below;
+5. define oracle, owned data, cleanup, and minimum evidence;
+6. state the escalation and stopping condition.
+
+Read [test-design-techniques.md](references/test-design-techniques.md) and
+[automated-test-levels.md](references/automated-test-levels.md) now, not only during
+execution.
+
+## 5. Build and maintain the RTM
+
+Assign separate stable IDs to requirements, atomic acceptance criteria, risks, and cases.
+Map each criterion to user value, risk, technique, level, environment, cases, result,
+evidence, and defects.
+
+Keep three dimensions separate:
+
+- applicability: `Applicable` or `Not applicable`;
+- selection: `Selected`, `Deferred`, or `Skipped`;
+- execution result: `Passed`, `Failed`, `Blocked`, `Not run`, or `Not applicable`.
+
+Never create composite statuses. Record a separate reason, blocker, or waiver. A test is
+`Passed` only when its current evidence satisfies its oracle; the requirement result is
+derived from all linked material tests.
+
+Mark case/coverage items `Required` or `Supporting` and use the exact aggregation precedence
+in the requirements reference. Keep flaky/test/environment causes as classifications; when
+they prevent a defensible result, use `Blocked` plus the classification.
 
 For every considered test type, record:
 
-`Type → requirement/risk → applicable/skipped/blocked reason → technique → environment →
-cost → approval → expected evidence`
+`Type → requirement/risk → applicability/selection → reason → technique/layer →
+environment → cost → approval → expected evidence`
 
-Do not run a catalog item merely because it exists. Do not skip an applicable item silently.
+Preserve authoritative external systems such as TestRail: create a local traceability index
+with external IDs and evidence links instead of duplicating hundreds of cases.
 
-## 5. Plan and obtain approval
+## 6. Plan and obtain proportional approval
 
-Select the lowest, fastest layer that can prove each requirement. Move upward only when a lower
-layer cannot provide the needed confidence. Avoid identical assertions at every layer.
+Read [test-planning.md](references/test-planning.md). Present:
 
-Present:
-
-- scope, non-goals, risk, profile, and user outcome;
-- requirements and unresolved conflicts;
-- selected, skipped, and blocked tests with reasons;
-- environment, versions, dependencies, data, external effects, and cleanup;
-- entry and exit criteria;
+- user goal, classification, scope, non-goals, assumptions, and unresolved conflicts;
+- risk register and requirement-to-test selection;
+- selected, deferred, skipped, and blocked work with reasons and residual risk;
+- environment, exact versions, dependencies, data, external effects, cleanup, and rollback;
+- entry, exit, stop, completion, and verdict criteria;
 - ordered execution and evidence plan;
-- estimated time, resources, and token cost;
-- exact files to create or modify;
-- approvals required.
+- realistic time/resources/cost only to the detail material for the decision;
+- exact files to create or modify.
 
-Wait for approval of the plan, live/E2E target, external effects, and test-artifact changes.
-Read [test-planning.md](references/test-planning.md).
+Read-only discovery and existing safe local tests need no artificial approval pause. Obtain
+explicit approval before creating or changing artifacts, running live/E2E mutations, using
+external accounts/services, exceeding ordinary local resource use, active security work,
+load/fault injection, production actions, or costly subagent/persona simulations. Reapprove
+when scope, target, effects, or cost materially changes.
 
-## 6. Create test artifacts
+## 7. Create test artifacts
 
-Prefer existing project conventions. Otherwise initialize:
+Do this only when the user/project requests persistent artifacts. Prefer project conventions.
+Otherwise initialize:
 
 ```text
 docs/tests/<date>-<scope>/
 ├── test-charter.md
+├── risk-register.md
 ├── rtm.md
 ├── test-plan.md
 ├── test-cases.md
 ├── defect-log.md
+├── evidence-index.md
 └── test-summary.md
 ```
 
-Run `scripts/init-test-session.py --root <project-root> --scope "<scope>"`. It refuses to
-overwrite an existing session. Templates live under `assets/templates/`.
+From the installed skill directory, run
+`python3 scripts/init-test-session.py --root <project-root> --scope "<scope>"`. It creates the
+session atomically and refuses to overwrite an existing one. Templates live in
+`assets/templates/`.
 
-Place automated tests in the established test tree and project-specific E2E/load/security
-scripts in the project's approved `scripts/` or test tooling directory. Never put credentials,
-personal data, or sensitive raw logs in tracked artifacts.
+Place automated tests in the established `tests/` tree. Put project-specific E2E, security,
+or load scripts in the approved `scripts/` or test-tooling directory. Never track credentials,
+personal data, unsafe payloads, or sensitive raw logs.
 
-## 7. Prepare environment and data
+## 8. Qualify environment and data
 
-Use an isolated, production-representative environment adequate for the claims. Prefer staging
-or a dedicated test server for live testing. Use local execution when complete isolation,
-Computer Use, or controlled data requires it.
+Use an isolated environment whose fidelity is sufficient for each claim. Prefer staging or a
+dedicated test server for live testing. Use local execution when complete isolation, Computer
+Use, or controlled data requires it.
 
-Before execution, state target, versions, credentials required, test data, mutations, external
-calls, monitoring, cleanup, and rollback. Use sanitized production-like data. Keep each test
-independent, order-independent, repeatable, and responsible for its own cleanup.
+Before mutations, state target, versions, credentials, data ownership, external calls,
+monitoring, limits, cleanup, and rollback. Use sanitized production-like data. Make tests
+order-independent and give parallel workers isolated namespaces.
 
-Run environment health checks and smoke tests first. If smoke fails, report the blocker and do
-not run dependent suites. Read
-[environment-data-and-live-testing.md](references/environment-data-and-live-testing.md).
+Read [environment-data-and-live-testing.md](references/environment-data-and-live-testing.md).
+Run target-environment health checks and smoke before any suite that depends on that target.
+Static and hermetic unit work may run earlier. If a smoke case fails, record that case as
+`Failed`, mark only dependent work `Blocked`, report immediately, and stop dependent suites.
 
-## 8. Execute from narrow to broad
+## 9. Execute narrow to broad
 
-Establish the existing baseline before attributing failures. Execute applicable layers in this
-order:
+Establish the existing baseline before attributing a new failure. Execute applicable work:
 
-`Static → Unit/component → Integration/contract/API → Smoke → Sanity → Targeted regression →
-Full regression → E2E/live → Non-functional → UAT support`
+`Static/review → Unit/component → Integration/contract/API → Environment smoke → Feature/flow
+sanity → Targeted regression → Full regression → E2E/live → Non-functional → UAT support`
 
-Sanity of the requested feature or flow is the core purpose. Cover positive, negative,
-boundary, invalid-action, permission, and failure paths for every material requirement.
+Sanity of the requested feature or business flow is the core goal. Cover positive, negative,
+boundary, invalid-action, permission, state, failure, and recovery behavior where material.
+Do not duplicate the same assertion at every layer.
 
-Use the project framework and official current documentation. Prefer real implementations or
-high-fidelity fakes over mocks when they do not increase test size or external risk.
+Use:
 
-Read:
-
-- [test-design-techniques.md](references/test-design-techniques.md) to choose test cases;
-- [automated-test-levels.md](references/automated-test-levels.md) for unit through E2E,
-  smoke, sanity, regression, CI, and automation quality;
-- [security-performance-and-resilience.md](references/security-performance-and-resilience.md)
-  when non-functional risk applies;
+- [automated-test-levels.md](references/automated-test-levels.md) for suite construction,
+  automation architecture, CI, flakiness, and evidence;
+- [code-quality-and-maintainability.md](references/code-quality-and-maintainability.md) for
+  project-specific correctness, architecture, spaghetti-code hotspots, scalability risks,
+  and testability review;
+- [environment-data-and-live-testing.md](references/environment-data-and-live-testing.md) for
+  environment qualification, live runs, and full-ride personas;
+- [security-testing.md](references/security-testing.md) for threat/control-derived security
+  review and approved safe verification;
+- [performance-testing.md](references/performance-testing.md) for workload, load/stress/soak,
+  capacity, and scalability;
+- [resilience-testing.md](references/resilience-testing.md) for approved steady-state fault
+  and recovery experiments;
 - [usability-accessibility-and-uat.md](references/usability-accessibility-and-uat.md) for
   human-facing quality.
 
-## 9. Enforce the Contract & Synchronization Gate
+## 10. Enforce the Contract & Synchronization Gate
 
-Apply this gate whenever the scope crosses services, repositories, providers, events, shared
-schemas, generated clients, webhooks, callbacks, or independently deployed versions.
+Apply whenever scope crosses a process, service, repository, provider, event, shared schema,
+generated client, webhook, callback, or independently deployed version.
+
+Read [contracts-and-distributed-systems.md](references/contracts-and-distributed-systems.md)
+before selecting compatibility cases or executing either side.
 
 Map:
 
 `feature/flow → consumer/caller → provider/producer → contract/schema → persisted state →
-downstream consumers → deployed versions`
+downstream consumers → deployed versions → user-visible final state`
 
-Verify both sides, schema and semantic compatibility, old/new coexistence, deployment order,
-errors, authorization, idempotency, retries, partial failures, and end-to-end state
-synchronization.
+Verify both sides, syntax and semantics, required old/new combinations, rollout order, errors,
+authorization, idempotency, retry/unknown outcomes, partial failure, convergence, recovery,
+and final-state reconciliation.
 
-If a dependency is unavailable, ask where its repository, contract, URL, environment, and
-deployed version can be accessed and whether safe verification is approved. Mark affected RTM
-rows `Blocked`. Never infer compatibility from one side alone.
+If a side is unavailable, ask for its local path, repository/contract URL, environment, exact
+deployed version, and permission for safe verification. Mark affected rows `Blocked`; never
+infer compatibility from one side alone.
 
-Read [contracts-and-distributed-systems.md](references/contracts-and-distributed-systems.md).
+## 11. Report findings immediately
 
-## 10. Handle findings immediately
+Read [defects-metrics-and-closure.md](references/defects-metrics-and-closure.md) before
+classifying or reporting the first finding.
 
-| Severity | Meaning | Action |
+| Severity/class | Meaning | Execution action |
 |---|---|---|
-| `Critical` | Data loss/corruption, exploitable security issue, major outage, irreversible effect | Report and stop |
-| `High` | Core goal/flow fails, serious contract break, no reasonable workaround | Report and stop |
-| `Medium` | Material partial failure; independent tests remain valid | Report, log, continue independent tests |
-| `Low` | Minor functional, cosmetic, or usability issue | Report or log, continue |
-| `Blocked` | Missing access, environment, data, dependency, or authority | Report affected RTM scope |
+| `Critical` | Data loss/corruption, exploitable security, major outage, irreversible effect | Report; stop all affected work |
+| `High` | Core goal/flow fails, serious contract break, no reasonable workaround | Report; stop all affected work |
+| `Medium` | Material partial failure; independent evidence remains valid | Report; log; continue independent work |
+| `Low` | Minor functional, visual, or usability impact | Report/log; continue |
+| `Blocked` | Missing access, environment, data, dependency, decision, or authority | Report affected scope |
 
-Include ID, title, severity, requirements/tests, environment/build/versions, preconditions,
-reproduction, expected vs actual, reproducibility, sanitized evidence, impact, and execution
-state.
+Include defect ID, title, severity, criterion/cases, environment/build/versions, preconditions,
+minimal reproduction, expected/actual, reproducibility, sanitized evidence, user/technical
+impact, and execution state. Distinguish severity from delivery priority.
 
-Do not ask “should I fix it?” as part of this workflow. State that repair requires a separate
-task. Read [defects-metrics-and-closure.md](references/defects-metrics-and-closure.md).
+Never alter the product in this workflow.
 
-## 11. Reconcile and close
+## 12. Reconcile and close
 
-Reconcile every requirement, test, result, defect, and evidence item with the RTM. Report:
+Reconcile every criterion, risk, test, result, defect, waiver, and evidence item with the RTM.
+Leave no applicable item unexplained. Report:
 
-1. Goal, scope, profile, environment, and exact versions.
-2. Requirement/RTM coverage.
-3. Every considered test type: selected/skipped/blocked reason, result, evidence.
-4. Every technique used: reason, test cases, findings.
-5. Passed, failed, blocked, not-run, defect, flakiness, and applicable quality metrics.
-6. Unverified requirements and residual risks.
-7. Entry/exit criteria result.
-8. One verdict: `Ready`, `Ready with concerns`, `Not ready`, or `Inconclusive`.
+1. goal, scope, profile, environment, commit/build, and component versions;
+2. requirement/risk coverage using declared denominators;
+3. every considered test type and its selection/result/evidence;
+4. every technique used, why, and what it found;
+5. pass/fail/block/not-run, defect, flake, compatibility, and applicable quality metrics;
+6. unverified requirements, invalid evidence, limitations, and residual risks;
+7. each entry/exit criterion and accountable risk acceptance;
+8. exactly one verdict: `Ready`, `Ready with concerns`, `Not ready`, or `Inconclusive`.
 
-Never let aggregate pass rate override a failed or blocked critical requirement. Archive useful
-scripts, sanitized data, and report snapshots using the project's conventions.
+Use the precedence and closure rules in
+[defects-metrics-and-closure.md](references/defects-metrics-and-closure.md). A pass percentage
+never overrides a failed or blocked critical criterion. Archive sanitized scripts, datasets,
+evidence manifests, and reports according to project retention rules.

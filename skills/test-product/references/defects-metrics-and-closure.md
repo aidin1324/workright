@@ -1,86 +1,264 @@
-# Defects, Metrics, and Closure
+# Defects, Evidence, Metrics, and Closure
 
-Read when any defect, blocker, flaky result, or final verdict is reported.
+Read before classifying the first finding and before issuing a final verdict. This reference
+defines immediate reporting, lifecycle without automatic repair, evidence validity,
+mathematical metrics, residual-risk acceptance, and deterministic verdict precedence.
 
-## Classify impact
+## Contents
 
-| Status | Use when | Execution |
+1. Distinguish finding classes
+2. Severity, priority, and execution action
+3. Report and manage the defect lifecycle
+4. Retest and flakiness
+5. Evidence validity and metrics
+6. Verdict decision model
+7. Closure and archive
+
+## 1. Distinguish finding classes
+
+| Class | Meaning | Product defect? |
 |---|---|---|
-| Critical | Data loss/corruption, exploitable security, major outage, irreversible effect | Report immediately; stop |
-| High | Core goal/critical flow fails, serious contract break, no reasonable workaround | Report immediately; stop |
-| Medium | Material partial failure; independent evidence remains valid | Report immediately; continue independent tests |
-| Low | Minor functional/cosmetic/usability issue | Record; continue |
-| Blocked | Access, environment, data, dependency, or authority is missing | Report affected RTM rows and residual risk |
+| Product defect | observed behavior violates accepted oracle | yes |
+| Requirement ambiguity/conflict | expected behavior is not authoritative | no; blocks oracle |
+| Blocker | access, environment, data, dependency, decision, or authority missing | no |
+| Test defect | test/harness/oracle implementation is wrong | no |
+| Environment failure | target/infrastructure invalidates result | no |
+| Flaky result | same identified conditions produce inconsistent result without explanation | unresolved |
+| Maintainability risk | code structure creates elevated future defect/change risk | not functional defect unless behavior fails |
+| Change request/preference | desired behavior is outside accepted baseline | no |
 
-Severity describes product impact. `Blocked` and flaky/test-defect/environment-failure are
-execution classifications, not product defects.
+Do not report a scanner warning, log anomaly, or suspected issue as a confirmed product defect
+until a valid oracle and evidence support it. Do report a credible Critical safety/security
+risk immediately while clearly labeling validation state.
 
-## Report a defect
+## 2. Severity, priority, and execution action
+
+Severity is user/product impact; priority is delivery urgency chosen by product/engineering.
+Never lower severity to fit a schedule.
+
+| Severity | Calibrated impact | Execution |
+|---|---|---|
+| Critical | catastrophic data/security/safety/financial impact, major outage, irreversible effect | report now; global or affected-target stop |
+| High | core goal/critical flow fails, serious supported contract break, no reasonable workaround | report now; stop affected branch and dependents |
+| Medium | material partial failure, limited scope or workable alternative | report now; continue only independent valid tests |
+| Low | minor localized functional/visual/usability impact | report/log; continue |
+
+Factors: affected users/tenants, data sensitivity/volume, reversibility, workaround,
+frequency/exposure, duration, contract/compliance, detectability, and propagation. Use the
+domain-specific security/accessibility rules where applicable.
+
+`Blocked`, test defect, environment failure, and flake are execution classifications, not
+severity.
+
+Stop handling always follows:
+
+`contain → cancel dependent work → make safe/cleanup → preserve evidence → classify/update
+RTM → report → yield if owner action is required`
+
+## 3. Report and manage the defect lifecycle
+
+### Minimum defect report
+
+```text
+DEF-003 — High — Old consumer rejects supported payment event
+Requirement/criterion/cases: REQ-012 / AC-018 / TC-CONTRACT-007
+Environment/build/versions: staging; producer 2.4.0; consumer 2.2.1
+Preconditions/data: exact safe state and owned identifiers
+Reproduction: minimal ordered steps or command
+Expected: accepted semantic outcome and forbidden effects
+Actual: observed response/state/effects
+Reproducibility: 5/5 under stated conditions
+Evidence: sanitized evidence IDs, timestamps, correlation IDs
+Impact: user/business/technical propagation
+Severity rationale: impact/exposure factors
+Execution: affected tests stopped; dependent RTM rows Blocked
+Status/owner: New / unassigned
+```
+
+Report every confirmed defect to the user immediately. Redact credentials, personal data,
+real customer IDs, exploitable secrets, and unsafe payloads.
+
+Never modify product code, weaken a test, or insert a workaround. Say:
+“Remediation requires a separate task.”
+
+### Lifecycle
 
 Use:
 
-```text
-DEF-003 — High — Old consumer cannot parse new payment event
-Requirement/Test: REQ-012 / TC-CONTRACT-007
-Environment/Versions: staging; producer 2.4.0; consumer 2.2.1
-Preconditions: rolling deployment with old consumer
-Reproduction: exact bounded steps or command
-Expected: old consumer processes event during supported rollout
-Actual: deserialization rejects new required field
-Reproducibility: 5/5
-Evidence: sanitized schema diff and correlation/log reference
-Impact: payment state stops synchronizing
-Execution: paused; dependent business-flow tests not run
-```
+`New → Triaged → Accepted for remediation → Ready for retest → Verified → Closed`
 
-Keep title, reproduction, expected/actual, versions, evidence, and user impact concrete. Redact
-secrets and personal data.
+Alternative states:
 
-Never fix the product, weaken the test, or ask to repair it inside this workflow. State:
-“Remediation requires a separate task.”
+- `Duplicate`: link canonical defect and retain affected cases;
+- `Known issue`: link owner/build/scope and review date;
+- `Rejected`: record evidence-based reason and decision owner;
+- `Deferred/Accepted risk`: require waiver;
+- `Reopened`: retest fails or regression appears.
 
-## Handle flakiness
+This testing workflow may create/update test-side records when authorized, but product repair
+is a separate user request. Do not mark `Closed` merely because a fix was proposed.
 
-Do not hide a failure with retries. Record:
+### Waiver/accepted risk
 
-- pass/fail sequence and retry policy;
-- seed, timing, machine, versions, and resource conditions;
-- whether isolation, ordering, shared state, network, clocks, or race behavior is implicated;
-- confidence lost and affected RTM rows.
+Require:
 
-Use `Inconclusive` or residual risk when nondeterminism prevents a reliable claim.
+- defect/risk and affected criteria/scope;
+- impact and evidence;
+- reason and compensating control/workaround;
+- named accountable acceptor;
+- applicable builds/releases/environments;
+- expiry or review date;
+- monitoring and rollback/containment;
+- limitations on the QA verdict.
 
-## Report meaningful metrics
+A tester/agent cannot accept business/release risk for the owner.
 
-Include:
+## 4. Retest and flakiness
 
-- requirements total and Passed/Failed/Blocked/Not run/Not applicable;
-- test cases by result and level;
-- defects by severity and requirement;
-- RTM coverage;
-- flaky/non-deterministic count;
-- code/branch/mutation coverage only when measured;
-- performance/security/compatibility metrics only when applicable;
-- skipped/blocked types and residual risk.
+### Retest after separate remediation
 
-Do not use defect density without defining denominator and period. Do not equate zero found
-defects with zero defects.
+1. identify new commit/build and exact dependency versions;
+2. preserve the original defect/evidence;
+3. reproduce original conditions and execute the original failing case first;
+4. verify expected output, required/forbidden effects, cleanup, and no hidden workaround;
+5. run targeted regression from changed area, callers, boundaries, contracts, and related
+   prior defects;
+6. add new evidence; never overwrite historical failure;
+7. mark `Verified` only when the original oracle passes on the fixed build;
+8. reopen when reproduction or affected regression fails.
 
-## Reconcile and close
+If the fix changes requirements, baseline the new approved requirement before retest.
 
-For every RTM row, confirm test IDs, result, evidence, and defect IDs. For every considered test
-type, show selected/skipped/blocked reason. For every used technique, show why, cases, and
-findings.
+### Flaky result
 
-Choose one verdict:
+Retries are diagnostic and never erase the first failure.
 
-- `Ready`: all critical exit criteria met; no open Critical/High; residual risk acceptable;
-- `Ready with concerns`: exit criteria allow release and named noncritical risks remain;
-- `Not ready`: critical criterion failed, open Critical/High exists, or safety threshold failed;
-- `Inconclusive`: missing or unreliable evidence prevents a defensible decision.
+Record:
 
-Aggregate pass rate never overrides a failed or blocked critical requirement.
+- ordered pass/fail sequence and retry policy;
+- build, environment, worker, order, seed, clocks, load, network, and resource conditions;
+- shared state/isolation evidence;
+- affected criteria and confidence loss;
+- classification/owner/quarantine expiry.
 
-Archive RTM, plan, cases, defect log, summary, reusable scripts, sanitized data, and evidence
-indexes. Run a short retrospective: what increased confidence, what caused delay/flakiness, and
-what durable test/process improvement is justified.
+Flaky rate =
+`tests with at least one inconsistent valid-condition outcome / tests executed in the period`.
+
+Quarantine only non-critical work with issue, owner, rationale, expiry, and visible exclusion.
+Critical/High evidence blocked by flakiness makes the verdict `Inconclusive` or `Not ready`
+when a confirmed product failure exists.
+
+## 5. Evidence validity and metrics
+
+### Evidence validity checklist
+
+Evidence is valid only when it identifies:
+
+- criterion/case and oracle;
+- command/action and actual observation;
+- timestamp, commit/build, deployed component versions;
+- target/config/feature flags and owned test data;
+- exit/result and relevant correlation/trace;
+- artifact location and optional integrity hash;
+- collector/tool version;
+- redaction, cleanup, and retention status.
+
+Evidence is invalid when stale, from another configuration, missing its oracle, contradicted by
+a current run, contaminated by environment/test defects, or unverifiable. Invalid evidence
+cannot support `Passed`.
+
+### Core metrics
+
+Always state numerator, denominator, period/build, exclusions, and criticality segments.
+
+- requirement coverage =
+  `applicable atomic criteria with defensible terminal evidence / all applicable criteria`;
+- risk-weighted coverage =
+  `effective risk weight of applicable criteria with valid Passed or Failed evidence / total
+  effective risk weight of all applicable criteria`; use the requirements-reference weight
+  after band override; deferred/skipped/blocked/not-run/waived rows stay in the denominator;
+- execution completion =
+  `selected applicable cases with Passed or Failed result / selected applicable cases`;
+  Blocked and Not run remain outside the numerator;
+- pass rate =
+  `Passed executed cases / cases with Passed or Failed result`;
+- defect density =
+  `confirmed defects / declared size unit` only when the size unit is meaningful;
+- reopen rate =
+  `reopened defects / defects previously marked Verified or Closed`;
+- defect leakage =
+  `defects first found after target phase/release / defects found in that defined population`;
+- defect age = current/closure time minus first confirmed time, reported by severity;
+- blocked age = current time minus block time, with owner;
+- automation coverage =
+  `automated selected stable cases / selected cases suitable for automation`;
+- code coverage and mutation score use the exact tool scope and do not replace requirement
+  coverage;
+- compatibility/accessibility/performance/resilience metrics come from their references.
+
+Do not compare counts across unequal periods, environments, scope, or severity. Never let a
+high aggregate rate hide one failed/unknown critical criterion.
+
+## 6. Verdict decision model
+
+The verdict applies to a named object:
+
+- pre-development: “requirements/test design readiness for implementation”;
+- implemented/deployed: “QA evidence readiness of this build/scope for the stated goal.”
+
+It is a QA evidence verdict, not release authorization or stakeholder UAT sign-off.
+
+### Precedence table
+
+Evaluate top to bottom:
+
+| Condition | Verdict |
+|---|---|
+| confirmed Critical/High defect affecting the goal; critical invariant fails; unsafe/uncontrolled effect | `Not ready` |
+| evidence is insufficient/invalid for any Critical/High criterion; required environment/dependency/version/UAT decision is blocked; critical flake unresolved | `Inconclusive` |
+| every mandatory exit criterion passes; no open in-scope product defect or execution blocker remains; all Required criteria have current evidence; cleanup/reconciliation passes; no material residual risk or waiver remains | `Ready` |
+| core goal and all Critical/High safety criteria pass, but bounded Medium/Low defects, accepted noncritical blocked/not-run work, a waiver, or another nonzero material residual risk remains with accountable acceptance | `Ready with concerns` |
+| none of the above can be established | `Inconclusive` |
+
+Rules:
+
+- `Not ready` takes precedence over `Inconclusive` when a confirmed disqualifying failure
+  exists, even if other rows are blocked.
+- A blocked or not-run noncritical row may allow `Ready with concerns` only when it is outside
+  mandatory exit criteria and an accountable owner accepts the bounded residual risk.
+- Any open in-scope Medium/Low product defect or material accepted gap requires
+  `Ready with concerns`, never plain `Ready`. An informational recommendation outside the
+  accepted product requirements is not an open product defect.
+- Missing stakeholder UAT yields `Inconclusive` only when UAT is a required exit gate; otherwise
+  report UAT as not performed without pretending stakeholder acceptance.
+- For pre-development, `Ready` means criteria and design are testable and implementation may
+  begin; runtime cases remain `Not run`. `Not ready` means unresolved design conflict/risk
+  prevents responsible implementation; `Inconclusive` means required product decisions are
+  missing.
+
+## 7. Closure and archive
+
+Closure procedure:
+
+1. reconcile every requirement, criterion, risk, case, result, defect, blocker, waiver, and
+   evidence ID;
+2. verify no pass lacks evidence and no final applicable row is blank;
+3. evaluate each entry/exit criterion explicitly;
+4. calculate metrics with denominators and criticality;
+5. state untested/invalid evidence and residual risk;
+6. confirm cleanup and final distributed state;
+7. issue exactly one verdict with rationale and decision-object name;
+8. archive artifacts with build/version identity, retention, access control, redaction, and
+   integrity metadata;
+9. conduct a short retrospective: useful technique, missed risk, bottleneck/flaky cause,
+   artifact/suite improvement.
+
+Archive only reproducible, sanitized value: cases/scripts, fixture definitions, evidence
+manifest, summary snapshots, contract/version matrices, and defect links. Keep external
+authoritative case systems authoritative.
+
+Research basis: ISTQB CTFL 4.0.1 and CTAL Test Management 3.0 for defect reports,
+traceability, monitoring metrics, exit criteria, completion, residual risk, and reporting.
+All local decision rules are specified above:
+<https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf> and
+<https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTAL-TM_Syllabus_v3.0_zKjKsaN.pdf>.

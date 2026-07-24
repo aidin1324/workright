@@ -4,17 +4,23 @@
 
 ## Defect template
 
-- Defect ID:
-- Title:
+- Defect ID/title:
 - Severity: `Critical` / `High` / `Medium` / `Low`
-- Requirement and test IDs:
-- Environment, build, and versions:
-- Preconditions:
-- Reproduction:
-- Expected:
+- Delivery priority/owner:
+- Requirement/criterion/test IDs:
+- Environment, build, and component versions:
+- Preconditions and owned data:
+- Minimal reproduction:
+- Expected output/effects/forbidden effects:
 - Actual:
 - Reproducibility:
-- Evidence:
-- User and technical impact:
-- Execution state after finding:
-- Status: `Open` (repairs require a separate task)
+- Sanitized evidence IDs:
+- User/business/technical impact:
+- Severity rationale:
+- Execution/containment/cleanup state:
+- Status: `New` / `Triaged` / `Accepted for remediation` / `Ready for retest` /
+  `Verified` / `Closed` / `Reopened` / `Duplicate` / `Known issue` /
+  `Deferred or accepted risk`
+- Canonical issue/duplicate/waiver/expiry:
+
+Product repair requires a separate task. Preserve prior failure evidence during retest.

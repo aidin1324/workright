@@ -5,15 +5,18 @@ import argparse
 import datetime as dt
 import re
 import shutil
+import tempfile
 from pathlib import Path
 
 
 TEMPLATE_NAMES = (
     "test-charter.md",
+    "risk-register.md",
     "rtm.md",
     "test-plan.md",
     "test-cases.md",
     "defect-log.md",
+    "evidence-index.md",
     "test-summary.md",
 )
 
@@ -21,9 +24,9 @@ TEMPLATE_NAMES = (
 def scope_slug(scope: str) -> str:
     if not scope.strip() or "/" in scope or "\\" in scope or ".." in scope:
         raise ValueError("scope must be non-empty text, not a path")
-    slug = re.sub(r"[^a-z0-9]+", "-", scope.strip().lower()).strip("-")
+    slug = re.sub(r"[\W_]+", "-", scope.strip().lower(), flags=re.UNICODE).strip("-")
     if not slug:
-        raise ValueError("scope must contain ASCII letters or digits")
+        raise ValueError("scope must contain letters or digits")
     return slug
 
 
@@ -51,21 +54,27 @@ def main() -> int:
     target = args.root.resolve() / "docs/tests" / f"{session_date}-{slug}"
     if target.exists():
         raise SystemExit(f"test session already exists: {target}")
-    target.mkdir(parents=True)
+    target.parent.mkdir(parents=True, exist_ok=True)
 
     replacements = {
         "{{SESSION_DATE}}": session_date,
         "{{SCOPE}}": args.scope.strip(),
         "{{SCOPE_SLUG}}": slug,
     }
-    for name in TEMPLATE_NAMES:
-        source = templates / name
-        content = source.read_text(encoding="utf-8")
-        for token, value in replacements.items():
-            content = content.replace(token, value)
-        destination = target / name
-        destination.write_text(content, encoding="utf-8")
-        shutil.copymode(source, destination)
+    temporary = Path(tempfile.mkdtemp(prefix=f".{target.name}.", dir=target.parent))
+    try:
+        for name in TEMPLATE_NAMES:
+            source = templates / name
+            content = source.read_text(encoding="utf-8")
+            for token, value in replacements.items():
+                content = content.replace(token, value)
+            destination = temporary / name
+            destination.write_text(content, encoding="utf-8")
+            shutil.copymode(source, destination)
+        temporary.replace(target)
+    except BaseException:
+        shutil.rmtree(temporary, ignore_errors=True)
+        raise
 
     print(target)
     return 0

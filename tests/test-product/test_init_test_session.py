@@ -10,10 +10,12 @@ SCRIPT = REPO_ROOT / "skills/test-product/scripts/init-test-session.py"
 TEMPLATES = REPO_ROOT / "skills/test-product/assets/templates"
 EXPECTED_FILES = {
     "test-charter.md",
+    "risk-register.md",
     "rtm.md",
     "test-plan.md",
     "test-cases.md",
     "defect-log.md",
+    "evidence-index.md",
     "test-summary.md",
 }
 
@@ -77,8 +79,18 @@ class InitTestSessionTests(unittest.TestCase):
             for scope in ("   ", "../checkout", "checkout/flow", r"checkout\flow"):
                 with self.subTest(scope=scope):
                     result = self.run_script(root, scope)
-                    self.assertNotEqual(result.returncode, 0)
-                    self.assertIn("scope", result.stderr.lower())
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("scope", result.stderr.lower())
+
+    def test_accepts_unicode_scope(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            result = self.run_script(root, "Оплата заказа")
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            target = root / "docs/tests/2026-07-24-оплата-заказа"
+            self.assertEqual(Path(result.stdout.strip()), target.resolve())
+            self.assertEqual({path.name for path in target.iterdir()}, EXPECTED_FILES)
 
 
 if __name__ == "__main__":

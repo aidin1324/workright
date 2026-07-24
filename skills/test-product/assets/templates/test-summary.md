@@ -1,34 +1,53 @@
 # Test Summary — {{SCOPE}}
 
 - Session date: {{SESSION_DATE}}
-- Environment and versions:
-- Profile:
+- Verdict object:
+- Lifecycle/scope/profile/intent route/target mode:
+- Environment, commit/build, component versions:
+- Test-basis baseline:
 
-## Requirement coverage
+## Goal and scope
+
+## Requirement and risk coverage
+
+| Metric | Numerator | Denominator | Value | Criticality/exclusions |
+|---|---:|---:|---:|---|
 
 ## Considered test types
 
-| Type | Selected / Skipped / Blocked | Why | Result | Evidence |
+| Type | Applicability/selection | Reason | Result | Evidence |
 |---|---|---|---|---|
 
 ## Techniques used
 
-| Technique | Why used | Test cases | Findings |
-|---|---|---|---|
-
-## Metrics
-
-| Passed | Failed | Blocked | Not run | RTM coverage |
+| Technique/model | Why | Coverage target/result | Cases | Findings |
 |---|---|---|---|---|
 
-## Defects
+## Results and quality metrics
 
-## Flaky or non-deterministic results
+| Passed | Failed | Blocked | Not run | Not applicable |
+|---:|---:|---:|---:|---:|
 
-## Residual risks
+## Defects, blockers, and flaky results
 
-## Exit criteria
+- Flaky-classified cases (separate from controlled result totals):
+
+## Invalid/missing evidence and unverified requirements
+
+## Residual risks and waivers
+
+| Risk/gap | Impact | Owner | Acceptance/rationale | Expiry/review |
+|---|---|---|---|---|
+
+## Entry, exit, and cleanup criteria
+
+| Criterion | Result | Evidence/acceptor |
+|---|---|---|
+
+## Limitations
 
 ## Verdict
 
-Choose exactly one: `Ready`, `Ready with concerns`, `Not ready`, `Inconclusive`.
+Choose exactly one QA evidence verdict: `Ready`, `Ready with concerns`, `Not ready`, or
+`Inconclusive`. Explain precedence and why. This is not release authorization or stakeholder
+UAT sign-off.

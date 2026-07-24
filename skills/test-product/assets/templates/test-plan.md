@@ -1,34 +1,56 @@
 # Test Plan — {{SCOPE}}
 
 - Session date: {{SESSION_DATE}}
+- Charter/RTM baseline:
 
-## Goal, scope, and non-goals
-
-## Assumptions and open decisions
+## Goal, scope, non-goals, assumptions
 
 ## Selected tests
 
-| Test type | Requirement or risk | Why applicable | Environment | Evidence |
-|---|---|---|---|---|
+| Test ID/type | Criteria/risks | Required/Supporting | Technique/coverage | Lowest level and escalation | Environment/build | Data/effects/cleanup | Order/dependencies | Cost/time | Approval | Expected evidence |
+|---|---|---|---|---|---|---|---|---|---|---|
 
-## Skipped or blocked tests
+## Deferred, skipped, or blocked
 
-| Test type | Status | Factual reason | Residual risk |
-|---|---|---|---|
+| Test type | Applicability | Selection | Result | Factual reason | Owner/unblock | Residual risk/waiver |
+|---|---|---|---|---|---|---|
 
-## Environment, versions, and dependencies
+## Baseline and regression impact
 
-## Test data, privacy, and cleanup
+- Comparator baseline:
+- Diff → components → callers/shared state → contracts → flows → prior defects:
+- Selected regression:
+- Excluded surface and reason:
+
+## Environment, versions, dependencies, data
 
 ## Entry criteria
 
-## Exit criteria
+| Criterion | Required for | Status/evidence |
+|---|---|---|
 
-## Execution order
+## Stop, containment, cleanup, resume
+
+## Exit and completion criteria
+
+| Criterion | Mandatory/optional | Result/evidence/acceptor |
+|---|---|---|
+
+## Execution order and parallel-isolation plan
 
 ## Estimate
 
-| Profile | Time | Resources | Token cost | Recommendation |
+| Route/profile | Range and assumptions | Resources | Material token/subagent cost | Confidence/deferred risk |
 |---|---|---|---|---|
 
+## Exact files to create or modify
+
 ## Approvals and prohibited actions
+
+## Conditional matrices
+
+- Contract/version/rollout matrix:
+- Security threat/control/probe matrix:
+- Performance workload/run sheet:
+- Resilience experiment:
+- Accessibility/UAT scope and decision owner:

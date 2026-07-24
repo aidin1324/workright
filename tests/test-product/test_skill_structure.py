@@ -12,19 +12,24 @@ REFERENCES = {
     "test-planning.md",
     "test-design-techniques.md",
     "automated-test-levels.md",
+    "code-quality-and-maintainability.md",
     "environment-data-and-live-testing.md",
     "contracts-and-distributed-systems.md",
-    "security-performance-and-resilience.md",
+    "security-testing.md",
+    "performance-testing.md",
+    "resilience-testing.md",
     "usability-accessibility-and-uat.md",
     "defects-metrics-and-closure.md",
 }
 TEMPLATES = {
-    "test-charter.md": ("Objective", "User outcome", "Approvals"),
+    "test-charter.md": ("Objective", "user outcome", "Approvals"),
+    "risk-register.md": ("Likelihood", "Impact", "Residual risk"),
     "rtm.md": ("Requirement ID", "Technique", "Evidence", "Defect IDs"),
-    "test-plan.md": ("Entry criteria", "Exit criteria", "Selected tests"),
-    "test-cases.md": ("Requirement IDs", "Expected result", "Cleanup"),
-    "defect-log.md": ("Severity", "Expected", "Actual", "Evidence"),
-    "test-summary.md": ("Residual risks", "Exit criteria", "Verdict"),
+    "test-plan.md": ("Entry criteria", "Exit and completion criteria", "Selected tests"),
+    "test-cases.md": ("Requirement/acceptance criterion/risk IDs", "Expected output", "Cleanup"),
+    "defect-log.md": ("Severity", "Expected", "Actual", "evidence"),
+    "evidence-index.md": ("Evidence ID", "Commit/build", "Redaction"),
+    "test-summary.md": ("Residual risks", "Entry, exit, and cleanup criteria", "Verdict"),
 }
 
 
@@ -44,8 +49,39 @@ class SkillStructureTests(unittest.TestCase):
     def test_all_references_exist_and_are_routed(self):
         for filename in REFERENCES:
             with self.subTest(filename=filename):
-                self.assertTrue((SKILL_ROOT / "references" / filename).is_file())
+                path = SKILL_ROOT / "references" / filename
+                self.assertTrue(path.is_file())
                 self.assertIn(filename, self.skill_text)
+                content = path.read_text(encoding="utf-8")
+                self.assertGreaterEqual(len(content.splitlines()), 100)
+                for operational_term in ("evidence", "risk"):
+                    self.assertIn(operational_term, content.lower())
+
+    def test_progressive_disclosure_and_local_links(self):
+        self.assertLessEqual(len(self.skill_text.splitlines()), 500)
+        links = re.findall(r"\]\((references/[^)]+\.md)\)", self.skill_text)
+        for link in links:
+            with self.subTest(link=link):
+                self.assertTrue((SKILL_ROOT / link).is_file())
+        self.assertLess(
+            self.skill_text.index("## Conditional reference router"),
+            self.skill_text.index("## 5. Build and maintain the RTM"),
+        )
+
+    def test_controlled_result_vocabulary_is_consistent(self):
+        corpus = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in (
+                SKILL,
+                *sorted((SKILL_ROOT / "references").glob("*.md")),
+                *sorted((SKILL_ROOT / "assets/templates").glob("*.md")),
+            )
+        )
+        self.assertNotIn("Not tested", corpus)
+        self.assertNotIn("security-performance-and-resilience.md", corpus)
+        self.assertIn("Required", corpus)
+        self.assertIn("Supporting", corpus)
+        self.assertIn("Effective risk weight", corpus)
 
     def test_all_templates_exist_with_required_contracts(self):
         for filename, required_terms in TEMPLATES.items():
@@ -58,7 +94,7 @@ class SkillStructureTests(unittest.TestCase):
 
     def test_workflow_contains_non_negotiable_boundaries(self):
         required_phrases = (
-            "Never fix defects",
+            "Never fix a defect",
             "production code",
             "Critical",
             "High",
@@ -66,11 +102,11 @@ class SkillStructureTests(unittest.TestCase):
             "Low",
             "stop",
             "continue",
-            "Requirement Traceability Matrix",
+            "RTM",
             "Contract & Synchronization Gate",
             "Focused",
             "Full ride",
-            "Not run — implementation absent",
+            "implementation absent",
         )
         for phrase in required_phrases:
             with self.subTest(phrase=phrase):
