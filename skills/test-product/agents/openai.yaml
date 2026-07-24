@@ -1,0 +1,7 @@
+interface:
+  display_name: "Test Product"
+  short_description: "Plan and execute evidence-based testing"
+  default_prompt: "Use $test-product to assess and test this feature or product without fixing defects."
+
+policy:
+  allow_implicit_invocation: true

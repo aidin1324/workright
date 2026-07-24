@@ -7,7 +7,8 @@ Portable Agent Skills for careful, complete software work.
 ```text
 workright/
 ├── skills/
-│   └── make-feature/      # Placeholder for the first skill
+│   ├── make-feature/      # Build an approved feature end to end
+│   └── test-product/      # Plan and execute traceable product testing
 ├── LICENSE
 └── README.md
 ```
@@ -44,6 +45,13 @@ skills/<skill-name>/
 Keep the core workflow in `SKILL.md`. Put a database schema, API reference, or
 rare edge-case guide in `references/` so it does not load for every task. Put
 repeated mechanical logic in `scripts/`. Most early skills need only `SKILL.md`.
+
+## Included skills
+
+- `make-feature` classifies, designs, implements, and verifies an approved feature.
+- `test-product` analyzes requirements, builds an RTM and risk-based test plan, creates
+  approved test artifacts, executes applicable testing, and reports evidence and defects.
+  It never fixes defects or modifies production code.
 
 ## Naming
 
