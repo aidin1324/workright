@@ -7,6 +7,7 @@ Portable Agent Skills for careful, complete software work.
 ```text
 workright/
 ├── skills/
+│   ├── deep-understanding/ # Build evidence-backed models and durable understanding
 │   ├── make-feature/      # Build an approved feature end to end
 │   └── test-product/      # Plan and execute traceable product testing
 ├── LICENSE
@@ -48,6 +49,8 @@ repeated mechanical logic in `scripts/`. Most early skills need only `SKILL.md`.
 
 ## Included skills
 
+- `deep-understanding` builds evidence-backed models before synthesis, traces unfamiliar
+  repositories and research deeply, and verifies durable understanding through transfer.
 - `make-feature` classifies, designs, implements, and verifies an approved feature.
 - `test-product` analyzes requirements, builds an RTM and risk-based test plan, creates
   approved test artifacts, executes applicable testing, and reports evidence and defects.

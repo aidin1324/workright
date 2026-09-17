@@ -1,0 +1,4 @@
+interface:
+  display_name: "Deep Understanding"
+  short_description: "Build evidence-backed, durable understanding"
+  default_prompt: "Use $deep-understanding to build and verify a deep model of this topic or system."
