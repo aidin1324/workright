@@ -218,6 +218,22 @@ Resume by cause:
 
 Never treat resume authority as permission to repair product code inside this workflow.
 
+### QA-remediation handoff
+
+Keep QA and repair as separate steps; they may belong to the same overall task and chat.
+Record the parent task/owner, approved criteria, failing case/evidence, exact build/target,
+affected/dependent statuses, current authority and limits, and next action.
+
+- If an existing implementation task explicitly authorizes the in-scope correction, close or
+  pause affected QA and return the defect to its implementation owner. Reuse that authority;
+  ask again only for a material change or missing permission. Resume QA on the new identified
+  build with the original reproducer and affected regression.
+- If the request is standalone QA, report the defect and separate remediation need. Do not
+  change the product or convert the QA request into an implementation request.
+
+Preserve the historical failure and unfinished parent obligations through handoff/compaction.
+A QA verdict applies to the tested build; it does not close the parent feature automatically.
+
 ### Exit criteria
 
 Define per session, for example:

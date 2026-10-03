@@ -1,6 +1,6 @@
 ---
 name: test-product
-description: Use when a feature, business flow, release, integration, or whole software product needs requirements-based test planning, quality assessment, or testing before development or after implementation or deployment.
+description: Use when a feature or product needs requirements-based test planning, read-only quality assessment, or testing of an implemented or deployed build.
 ---
 
 # Test Product
@@ -22,8 +22,9 @@ remaining risk justifies it.
 - Stop all affected execution on Critical/High defects, data risk, an invalid environment, or
   a requirement conflict that changes the oracle. Continue only independent work after
   Medium/Low findings.
-- Do not ask to repair the defect inside this workflow. State that remediation requires a
-  separate task; the user can request it later.
+- Route product repair outside QA. Preserve an already authorized implementation task;
+  standalone QA does not authorize repair. Use the handoff rules in
+  [test-planning.md](references/test-planning.md#qa-remediation-handoff).
 - Never run destructive security tests, load, fault injection, real external side effects, or
   production mutations without action-specific approval.
 - Never claim `Passed`, compatibility, coverage, or readiness without current, reproducible
@@ -33,14 +34,17 @@ remaining risk justifies it.
 
 Follow this sequence and do not cross a gate early:
 
-`Intent → Discovery → Classification → Test basis → Acceptance criteria → Ambiguity gate →
-Risk → Technique/layer selection → RTM → Plan → Proportional approval → Artifacts →
-Environment qualification → Smoke → Execution → Immediate findings → Reconciliation →
-Closure`
+`Intent → Discovery/oracle → Risk/test selection → Plan/authority → Execution →
+Findings/reconciliation → Closure`
 
 Keep user communication brief. For each important technique, say what was used and why in one
 factual sentence. Explain a pause with the exact missing decision, access, evidence, or safety
 approval.
+
+At entry, resume, or handoff, recover the requested outcome, approved criteria, task owner,
+authority, exact build/target, prior evidence, and unfinished obligations. Reuse decisions;
+ask only for material gaps. Update this compact state at milestones in existing records or
+chat. Persistent artifacts remain conditional on the selected route and user/project request.
 
 ## Invocation router
 
@@ -64,6 +68,9 @@ Choose target mode independently:
 Every route uses the same oracle, traceability, immediate-defect, evidence, and verdict rules.
 A low-risk Focused run may keep a compact RTM/summary in chat when files were not requested.
 `Pre-development` closes with a design-readiness verdict; it does not pretend runtime proof.
+Plan-only and read-only closure reconcile their scoped criteria, findings, evidence limits,
+and verdict; environment, execution metrics, resource cleanup, and archives apply only to
+work actually performed or artifacts requested. Do not manufacture runtime coverage.
 
 Step exit conditions:
 
@@ -114,7 +121,7 @@ means every known test or permission for unsafe work.
 Use the calibrated risk and profile rules in
 [requirements-rtm-and-risk.md](references/requirements-rtm-and-risk.md) and
 [test-planning.md](references/test-planning.md). Reclassify when discovery changes exposure.
-Use the most advanced lifecycle state: `Deployed` when testing a running target, otherwise
+Classify the named assessment target: `Deployed` when testing its running build, otherwise
 `Implemented` when code exists, otherwise `Pre-development`.
 
 ## Conditional reference router
@@ -153,6 +160,10 @@ rollout, rollback, time/tolerance rules, and external effects where applicable.
 If “better,” “easier,” “correct,” “fast,” “secure,” or “synchronized” has no measurable
 oracle, stop and ask one focused product question. Do not use current implementation as the
 oracle when product intent is unclear.
+
+For a material integration outcome, name the actual consumer/provider, supported contract,
+observable final state, and what a mock cannot prove. Trace returned identifiers and state
+through to their consumer, rather than stopping at a successful producer response.
 
 For `Pre-development`, perform Shift Left analysis. Produce criteria, risks, RTM, and plan.
 Set runtime rows to `Result: Not run` and `Reason: implementation absent`; do not call them
@@ -218,6 +229,7 @@ Read [test-planning.md](references/test-planning.md). Present:
 - realistic time/resources/cost only to the detail material for the decision;
 - exact files to create or modify.
 
+Previously granted authority counts for the same scope, target, effects, and limits.
 Read-only discovery and existing safe local tests need no artificial approval pause. Obtain
 explicit approval before creating or changing artifacts, running live/E2E mutations, using
 external accounts/services, exceeding ordinary local resource use, active security work,
@@ -226,20 +238,9 @@ when scope, target, effects, or cost materially changes.
 
 ## 7. Create test artifacts
 
-Do this only when the user/project requests persistent artifacts. Prefer project conventions.
-Otherwise initialize:
-
-```text
-docs/tests/<date>-<scope>/
-├── test-charter.md
-├── risk-register.md
-├── rtm.md
-├── test-plan.md
-├── test-cases.md
-├── defect-log.md
-├── evidence-index.md
-└── test-summary.md
-```
+Do this only when the user/project requests persistent artifacts. Prefer project conventions;
+when none exist, the initializer creates the charter, risks, RTM, plan, cases, defects,
+evidence index, and summary under `docs/tests/<date>-<scope>/`.
 
 From the installed skill directory, run
 `python3 scripts/init-test-session.py --root <project-root> --scope "<scope>"`. It creates the
@@ -276,23 +277,11 @@ Sanity of the requested feature or business flow is the core goal. Cover positiv
 boundary, invalid-action, permission, state, failure, and recovery behavior where material.
 Do not duplicate the same assertion at every layer.
 
-Use:
-
-- [automated-test-levels.md](references/automated-test-levels.md) for suite construction,
-  automation architecture, CI, flakiness, and evidence;
-- [code-quality-and-maintainability.md](references/code-quality-and-maintainability.md) for
-  project-specific correctness, architecture, spaghetti-code hotspots, scalability risks,
-  and testability review;
-- [environment-data-and-live-testing.md](references/environment-data-and-live-testing.md) for
-  environment qualification, live runs, and full-ride personas;
-- [security-testing.md](references/security-testing.md) for threat/control-derived security
-  review and approved safe verification;
-- [performance-testing.md](references/performance-testing.md) for workload, load/stress/soak,
-  capacity, and scalability;
-- [resilience-testing.md](references/resilience-testing.md) for approved steady-state fault
-  and recovery experiments;
-- [usability-accessibility-and-uat.md](references/usability-accessibility-and-uat.md) for
-  human-facing quality.
+Execute the applicable references selected by the router. After a relevant code/config edit,
+mark affected evidence stale and rerun the original case plus affected regression. Retain
+independent evidence whose conditions remain valid; repeat a full campaign only when new
+changes, failures, risks, or required project gates justify it. Keep diagnostic retries bounded
+by a declared count/deadline and stop on a repeated unchanged infrastructure blocker.
 
 ## 10. Enforce the Contract & Synchronization Gate
 
@@ -330,7 +319,8 @@ classifying or reporting the first finding.
 
 Include defect ID, title, severity, criterion/cases, environment/build/versions, preconditions,
 minimal reproduction, expected/actual, reproducibility, sanitized evidence, user/technical
-impact, and execution state. Distinguish severity from delivery priority.
+impact, blocked stage, next action, and execution state. Distinguish severity from delivery
+priority and unsupported-input experiments from failures of the accepted contract.
 
 Never alter the product in this workflow.
 
@@ -343,7 +333,7 @@ Leave no applicable item unexplained. Report:
 2. requirement/risk coverage using declared denominators;
 3. every considered test type and its selection/result/evidence;
 4. every technique used, why, and what it found;
-5. pass/fail/block/not-run, defect, flake, compatibility, and applicable quality metrics;
+5. execution results and applicable defect, flake, compatibility, and quality metrics;
 6. unverified requirements, invalid evidence, limitations, and residual risks;
 7. each entry/exit criterion and accountable risk acceptance;
 8. exactly one verdict: `Ready`, `Ready with concerns`, `Not ready`, or `Inconclusive`.
@@ -352,3 +342,7 @@ Use the precedence and closure rules in
 [defects-metrics-and-closure.md](references/defects-metrics-and-closure.md). A pass percentage
 never overrides a failed or blocked critical criterion. Archive sanitized scripts, datasets,
 evidence manifests, and reports according to project retention rules.
+
+Close this QA milestone separately from implementation, MR/CI, deployment, enabled capabilities,
+and user acceptance. Hand over unresolved obligations with their owner, build, evidence,
+authority, and next action; QA completion does not erase pending authorized remediation.

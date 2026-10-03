@@ -41,8 +41,9 @@ Examples:
 - browser support claims need the approved browser/device matrix.
 
 If a material gap remains, mark affected RTM rows `Blocked`; when it prevents the named
-readiness claim, the session verdict is `Inconclusive`. “Works locally” does not establish
-“ready in production.”
+readiness claim, evaluate the overall verdict using the
+[closure precedence](defects-metrics-and-closure.md#precedence-table).
+“Works locally” does not establish “ready in production.”
 
 Prefer in order:
 
@@ -143,6 +144,8 @@ does not automatically mean production.
 Record:
 
 - target URL/environment and exact versions;
+- repository/owner, host, service/Compose project, endpoint/port, build SHA/image digest,
+  and explicitly excluded resources; identify the command's actual target before mutation;
 - account/role/tenant and test-data namespace;
 - approved actions and prohibited actions;
 - external providers and real-world consequences;
@@ -152,6 +155,10 @@ Record:
 - cleanup and rollback;
 - evidence capture and redaction;
 - operator/owner contacts when an incident is possible.
+
+When rollback is required, verify the artifact's source revision and target provenance before
+mutation; a convenient tag name alone is insufficient. After action, verify the intended
+target's build/final state and preservation of explicitly excluded resources.
 
 No approved target/effect/cleanup means no mutating live test.
 

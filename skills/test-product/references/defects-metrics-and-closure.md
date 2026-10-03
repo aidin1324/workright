@@ -31,6 +31,11 @@ Do not report a scanner warning, log anomaly, or suspected issue as a confirmed 
 until a valid oracle and evidence support it. Do report a credible Critical safety/security
 risk immediately while clearly labeling validation state.
 
+For a suspected contract defect, establish that the input/state is reachable under the
+supported producer/consumer contract. An invented mock payload proves only the tested input
+behavior; without reachability or a required rejection/recovery rule, it is not a confirmed
+product defect. Label unsupported experiments, test defects, and hardening proposals separately.
+
 ## 2. Severity, priority, and execution action
 
 Severity is user/product impact; priority is delivery urgency chosen by product/engineering.
@@ -79,7 +84,8 @@ Report every confirmed defect to the user immediately. Redact credentials, perso
 real customer IDs, exploitable secrets, and unsafe payloads.
 
 Never modify product code, weaken a test, or insert a workaround. Say:
-“Remediation requires a separate task.”
+“Product remediation is a separate step outside QA.” Route ownership and existing authority
+through [the planning handoff](test-planning.md#qa-remediation-handoff).
 
 ### Lifecycle
 
@@ -95,8 +101,8 @@ Alternative states:
 - `Deferred/Accepted risk`: require waiver;
 - `Reopened`: retest fails or regression appears.
 
-This testing workflow may create/update test-side records when authorized, but product repair
-is a separate user request. Do not mark `Closed` merely because a fix was proposed.
+This workflow may update authorized test-side records. Product repair follows the handoff's
+authority rules outside QA. Do not mark `Closed` merely because a fix was proposed.
 
 ### Waiver/accepted risk
 
@@ -166,6 +172,10 @@ Evidence is valid only when it identifies:
 Evidence is invalid when stale, from another configuration, missing its oracle, contradicted by
 a current run, contaminated by environment/test defects, or unverifiable. Invalid evidence
 cannot support `Passed`.
+
+After code/config changes, invalidate results for affected criteria/consumers and record why.
+Reuse unaffected evidence only when the tested conditions still match; do not apply an old
+build's success to a changed path. A waiver records acceptance of a gap, never proof of a pass.
 
 ### Core metrics
 

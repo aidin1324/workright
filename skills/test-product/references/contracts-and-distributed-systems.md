@@ -262,7 +262,9 @@ Compatibility/synchronization passes only when:
 - all sides and exact deployed versions have evidence.
 
 Missing one side or a required combination makes affected RTM rows `Blocked` and the
-compatibility/readiness verdict `Inconclusive`, not Ready.
+compatibility proof incomplete. Derive the overall verdict from
+[closure precedence](defects-metrics-and-closure.md#precedence-table); a confirmed
+disqualifying defect still takes precedence over missing evidence.
 
 ## 7. Worked example
 
